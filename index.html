@@ -144,57 +144,39 @@
 </div>
 
 <script>
-    // 1. Load data when the page opens
-window.addEventListener('load', () => {
-    const savedDocket = localStorage.getItem('lastDocket');
-    const savedCourier = localStorage.getItem('lastCourier');
+    function processTracking() {
+        const docket = document.getElementById("docketNo").value.trim();
+        const courier = document.getElementById("courier").value;
+        const frame = document.getElementById("trackingFrame");
+        const fallback = document.getElementById("fallback-message");
+        const externalLink = document.getElementById("externalLink");
 
-    if (savedDocket) {
-        document.getElementById("docketNo").value = savedDocket;
+        if (!docket || !courier) return alert("Fill all fields");
+
+        let url = "";
+        // Sites that block iframes
+        const blocksIframe = ["delhivery", "amazon", "xpressbees"];
+
+        switch (courier) {
+            case "xpressbees": url = `https://www.xpressbees.com/shipment/tracking?awbNo=${docket}`; break;
+            case "delhivery": url = `https://www.delhivery.com/track-v2/package/${docket}`; break;
+            case "dtdc": url = `https://txk.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showCITrackingDetails&cType=Consignment&cnNo=${docket}`; break;
+            case "amazon": url = `https://track.amazon.in/tracking/${docket}`; break;
+        }
+
+        if (blocksIframe.includes(courier)) {
+            frame.style.display = "none";
+            fallback.style.display = "flex";
+            externalLink.href = url;
+            // Optionally auto-open too:
+            window.open(url, "_blank");
+        } else {
+            fallback.style.display = "none";
+            frame.style.display = "block";
+            frame.src = url;
+        }
     }
-    if (savedCourier) {
-        document.getElementById("courier").value = savedCourier;
-        
-        // Optional: If you want it to automatically track on refresh
-        if (savedDocket) processTracking();
-    }
-});
-
-function processTracking() {
-    const docket = document.getElementById("docketNo").value.trim();
-    const courier = document.getElementById("courier").value;
-    const frame = document.getElementById("trackingFrame");
-    const fallback = document.getElementById("fallback-message");
-    const externalLink = document.getElementById("externalLink");
-
-    if (!docket || !courier) return alert("Fill all fields");
-
-    // 2. Save data to LocalStorage
-    localStorage.setItem('lastDocket', docket);
-    localStorage.setItem('lastCourier', courier);
-
-    let url = "";
-    const blocksIframe = ["delhivery", "amazon", "xpressbees"];
-
-    switch (courier) {
-        case "xpressbees": url = `https://www.xpressbees.com/shipment/tracking?awbNo=${docket}`; break;
-        case "delhivery": url = `https://www.delhivery.com/track-v2/package/${docket}`; break;
-        case "dtdc": url = `https://txk.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showCITrackingDetails&cType=Consignment&cnNo=${docket}`; break;
-        case "amazon": url = `https://track.amazon.in/tracking/${docket}`; break;
-    }
-
-    if (blocksIframe.includes(courier)) {
-        frame.style.display = "none";
-        fallback.style.display = "flex";
-        externalLink.href = url;
-    } else {
-        fallback.style.display = "none";
-        frame.style.display = "block";
-        frame.src = url;
-    }
-}
 </script>
 
 </body>
-
 </html>
