@@ -1,3 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tracker Pro</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-main: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-main);
+            background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        .dashboard { display: flex; width: 100%; height: 100vh; padding: 20px; gap: 20px; }
+
+        .sidebar {
+            flex: 0 0 380px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .main-view {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .view-header {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Message for blocked iframes */
+        #fallback-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .external-link-btn {
+            background: #ffffff;
+            color: #0f172a;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+
+        .external-link-btn:hover { background: var(--primary); color: white; }
+
+        #trackingFrame { width: 100%; height: 100%; border: none; background: white; display: none; }
+
+        /* Icon & UI Styles */
+        .brand-icon { width: 48px; height: 48px; background: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 22px; }
+        .field { margin-bottom: 20px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
+        .input-ctrl { width: 100%; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--glass-border); border-radius: 12px; padding: 14px; color: white; outline: none; }
+        .btn-track { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        
+        @media (max-width: 900px) {
+            .dashboard { flex-direction: column; overflow-y: auto; }
+            .sidebar { flex: none; width: 100%; }
+            .main-view { min-height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="sidebar">
+        <div class="brand-icon">📦</div>
+        <h2>Track Shipment</h2>
+        <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 30px;">Real-time logistics monitoring</p>
+
+        <div class="field">
+            <label>Tracking Number</label>
+            <input type="text" id="docketNo" class="input-ctrl" placeholder="Enter AWB Number">
+        </div>
+
+        <div class="field">
+            <label>Courier Service</label>
+            <select id="courier" class="input-ctrl">
+                <option value="" disabled selected>Select Partner</option>
+                <option value="xpressbees">XpressBees (New Tab)</option>
+                <option value="delhivery">Delhivery (New Tab)</option>
+                <option value="dtdc">DTDC (In-Page)</option>
+                <option value="amazon">Amazon (New Tab)</option>
+                <option value="goswift">Goswift (New Tab)</option>
+            </select>
+        </div>
+
+        <button class="btn-track" onclick="processTracking()">Check Status</button>
+    </div>
+
+    <div class="main-view">
+        <div class="view-header">
+            <div><span style="color: #10b981;">●</span> Result Console</div>
+        </div>
+        
+        <iframe id="trackingFrame"></iframe>
+
+        <div id="fallback-message">
+            <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
+            <h3>Security Policy Protection</h3>
+            <p style="color: var(--text-dim); max-width: 300px; margin: 10px auto;">
+                This courier prevents their site from being embedded for security reasons.
+            </p>
+            <a href="#" id="externalLink" target="_blank" class="external-link-btn">Open in New Secure Tab</a>
+        </div>
+    </div>
+</div>
+
 <script>
 function processTracking() {
     const docket = document.getElementById("docketNo").value.trim();
@@ -10,32 +156,39 @@ function processTracking() {
 
     let url = "";
 
-    // Couriers that block iframe embedding
+    // Couriers that BLOCK iframe embedding
     const blocksIframe = ["delhivery", "amazon", "xpressbees", "goswift"];
 
     switch (courier) {
         case "xpressbees":
-            url = `https://www.xpressbees.com/shipment/tracking?awbNo=${docket}`;
+            url = `https://www.xpressbees.com/shipment/tracking?awbNo=${encodeURIComponent(docket)}`;
             break;
+
         case "delhivery":
-            url = `https://www.delhivery.com/track-v2/package/${docket}`;
+            url = `https://www.delhivery.com/track-v2/package/${encodeURIComponent(docket)}`;
             break;
+
         case "dtdc":
-            url = `https://txk.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showCITrackingDetails&cType=Consignment&cnNo=${docket}`;
+            url = `https://txk.dtdc.com/ctbs-tracking/customerInterface.tr?submitName=showCITrackingDetails&cType=Consignment&cnNo=${encodeURIComponent(docket)}`;
             break;
+
         case "amazon":
-            url = `https://track.amazon.in/tracking/${docket}`;
+            url = `https://track.amazon.in/tracking/${encodeURIComponent(docket)}`;
             break;
+
         case "goswift":
-            url = `https://www.trackingmore.com/goswift-tracking?trackingNumber=${docket}`;
+            url = `https://www.trackingmore.com/track?number=${encodeURIComponent(docket)}&express=goswift&lang=en`;
             break;
     }
 
     if (blocksIframe.includes(courier)) {
+        frame.src = "";
         frame.style.display = "none";
         fallback.style.display = "flex";
         externalLink.href = url;
-        window.open(url, "_blank");
+
+        // Open safely in new tab
+        window.open(url, "_blank", "noopener,noreferrer");
     } else {
         fallback.style.display = "none";
         frame.style.display = "block";
@@ -43,3 +196,7 @@ function processTracking() {
     }
 }
 </script>
+
+
+</body>
+</html>
